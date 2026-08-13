@@ -2,6 +2,13 @@
 // Skills are deterministic local capabilities. Anything not handled here
 // falls through to the AI brain (the CHAT skill).
 
+import {
+  isDeviceControl,
+  isDeviceStatus,
+  isSceneControl,
+  runDeviceControlSkill,
+  runDeviceStatusSkill,
+} from "./skills/devices";
 import { memoryStore, taskStore } from "./storage";
 import type { Intent, MemoryType, SkillResult } from "./types";
 
