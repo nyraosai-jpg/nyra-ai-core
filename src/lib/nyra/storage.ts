@@ -73,15 +73,14 @@ export const taskStore = {
   },
   toggle(id: string) {
     this.save(
-      this.all().map((t) =>
-        t.id === id
-          ? {
-              ...t,
-              status: t.status === "done" ? "open" : "done",
-              completedAt: t.status === "done" ? undefined : Date.now(),
-            }
-          : t,
-      ),
+      this.all().map((t) => {
+        if (t.id !== id) return t;
+        if (t.status === "done") {
+          const { completedAt: _done, ...rest } = t;
+          return { ...rest, status: "open" as const };
+        }
+        return { ...t, status: "done" as const, completedAt: Date.now() };
+      }),
     );
   },
   remove(id: string) {
