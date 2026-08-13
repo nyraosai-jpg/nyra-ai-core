@@ -8,7 +8,13 @@ const labels: Record<VoiceState, string> = {
   error: "Something went wrong",
 };
 
-export function NyraStatus({ state, detail }: { state: VoiceState; detail?: string }) {
+export function NyraStatus({
+  state,
+  detail,
+}: {
+  state: VoiceState;
+  detail?: string | undefined;
+}) {
   return (
     <div className="text-center" role="status" aria-live="polite">
       <p className="text-sm tracking-[0.28em] uppercase text-muted-foreground">{labels[state]}</p>
