@@ -2,6 +2,102 @@
 
 export type VoiceState = "idle" | "listening" | "processing" | "speaking" | "error";
 
+/** What the orb is expressing. A superset of VoiceState. */
+export type OrbState =
+  | "idle"
+  | "listening"
+  | "thinking"
+  | "speaking"
+  | "connecting"
+  | "device_active"
+  | "memory"
+  | "error";
+
+/* ---------------- devices ---------------- */
+
+export type DeviceType =
+  | "light"
+  | "thermostat"
+  | "fan"
+  | "tv"
+  | "speaker"
+  | "lock"
+  | "sensor"
+  | "camera"
+  | "switch";
+
+export interface DeviceState {
+  value: string;
+  on?: boolean;
+  brightness?: number;
+  temperature?: number;
+  volume?: number;
+  unit?: string;
+}
+
+export interface Device {
+  id: string;
+  name: string;
+  type: DeviceType;
+  room: string;
+  manufacturer: string;
+  capabilities: string[];
+  state: DeviceState;
+  connected: boolean;
+}
+
+export type DeviceAction =
+  | "turn_on"
+  | "turn_off"
+  | "toggle"
+  | "set_brightness"
+  | "set_temperature"
+  | "set_volume"
+  | "lock"
+  | "unlock"
+  | "activate_scene";
+
+export interface Scene {
+  id: string;
+  name: string;
+  source: "home_assistant" | "nyra";
+}
+
+/* ---------------- integrations ---------------- */
+
+export type IntegrationState = "connected" | "not_configured" | "error" | "planned";
+
+export interface IntegrationStatus {
+  id: string;
+  name: string;
+  category: "ai" | "voice" | "memory" | "devices" | "vision" | "productivity" | "media" | "context";
+  status: IntegrationState;
+  detail?: string;
+  envKeys: string[];
+}
+
+/* ---------------- activity ---------------- */
+
+export type ActivityKind =
+  | "listening"
+  | "understanding"
+  | "thinking"
+  | "speaking"
+  | "memory"
+  | "task"
+  | "device"
+  | "system"
+  | "error";
+
+export interface ActivityEvent {
+  id: string;
+  kind: ActivityKind;
+  message: string;
+  detail?: string;
+  at: number;
+}
+
+
 export type Role = "user" | "nyra" | "system";
 
 export interface Message {
@@ -49,6 +145,11 @@ export interface NyraSettings {
   memoryEnabled: boolean;
   voiceOutputEnabled: boolean;
   voiceIsolation: boolean;
+  /** Hands-free: keep the mic open in this tab and wake on the wake word. */
+  handsFree: boolean;
+  wakeWord: string;
+  /** Architecture flag for future proactive suggestions. Off by default. */
+  proactiveEnabled: boolean;
   language: string;
   voiceId: string;
 }
@@ -61,6 +162,9 @@ export type Intent =
   | "TASK_LIST"
   | "TASK_COMPLETE"
   | "PLAN_DAY"
+  | "DEVICE_CONTROL"
+  | "DEVICE_STATUS"
+  | "SCENE_CONTROL"
   | "HELP"
   | "UNKNOWN";
 
@@ -69,4 +173,8 @@ export interface SkillResult {
   text: string;
   handled: boolean;
   intent: Intent;
+  /** Set when a real device action was confirmed — drives the orb pulse. */
+  deviceActive?: boolean;
+  /** Set when memory was written or recalled. */
+  memoryTouched?: boolean;
 }

@@ -8,6 +8,7 @@ import { ConversationPanel } from "@/components/nyra/ConversationPanel";
 import { StatusPill } from "@/components/nyra/SystemStatus";
 import { useNyra } from "@/hooks/useNyra";
 import { getNyraStatus } from "@/lib/nyra/ai.functions";
+import { getIntegrationStatus } from "@/lib/nyra/devices.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,16 +17,21 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Nyra listens, understands, routes, acts and remembers. A calm, voice-first personal AI operating system.",
+          "Nyra listens, understands, routes, acts and remembers. A living, voice-first personal AI operating system.",
       },
       { property: "og:title", content: "Nyra — Your personal AI operating system" },
       {
         property: "og:description",
         content: "Speak. Think. Remember. Act. Nyra is a voice-first personal AI operating system.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  loader: () => getNyraStatus(),
+  loader: async () => ({
+    status: await getNyraStatus(),
+    integrations: await getIntegrationStatus(),
+  }),
   component: HomePage,
 });
 
@@ -38,11 +44,17 @@ function greeting() {
 }
 
 function HomePage() {
-  const status = Route.useLoaderData();
+  const { status, integrations } = Route.useLoaderData();
   const nyra = useNyra(status);
   const [hello, setHello] = useState("Hello.");
+  const [micSupported, setMicSupported] = useState(false);
 
-  useEffect(() => setHello(greeting()), []);
+  useEffect(() => {
+    setHello(greeting());
+    setMicSupported(nyra.micSupported);
+  }, [nyra.micSupported]);
+
+  const devices = integrations.find((i) => i.id === "home_assistant");
 
   return (
     <NyraShell>
@@ -52,19 +64,34 @@ function HomePage() {
           <p className="mt-2 text-muted-foreground">How can I help?</p>
         </div>
 
-        <NyraOrb state={nyra.state} />
+        <NyraOrb state={nyra.state} level={nyra.level} />
 
-        <NyraStatus state={nyra.state} detail={nyra.error ?? undefined} />
+        <NyraStatus label={nyra.statusLabel} detail={nyra.partial || undefined} />
 
-        <VoiceButton
-          state={nyra.state}
-          disabled={!nyra.micSupported}
-          onStart={() => void nyra.startListening()}
-          onStop={() => {
-            nyra.stopListening();
-            nyra.stopSpeaking();
-          }}
-        />
+        <div className="flex flex-col items-center gap-3">
+          <VoiceButton
+            state={nyra.state}
+            disabled={!micSupported}
+            onStart={() => void nyra.startListening()}
+            onStop={() => {
+              nyra.stopListening();
+              nyra.stopSpeaking();
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => void nyra.setHandsFree(!nyra.settings.handsFree)}
+            disabled={!micSupported}
+            className="min-h-10 rounded-full border border-border/60 bg-nyra-panel px-4 text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground disabled:opacity-50"
+          >
+            {nyra.settings.handsFree ? "Hands-free on" : "Hands-free off"}
+          </button>
+          <p className="max-w-xs text-center text-[11px] text-muted-foreground">
+            {nyra.settings.handsFree
+              ? `Say “${nyra.settings.wakeWord}” followed by your request. Only works while this tab is open.`
+              : "Turn on hands-free to wake Nyra with your voice."}
+          </p>
+        </div>
 
         <div className="flex flex-wrap items-center justify-center gap-2">
           <StatusPill
@@ -79,30 +106,32 @@ function HomePage() {
             okText="ElevenLabs ready"
             offText="Not configured"
           />
+          <StatusPill label="Memory" ok okText="Online" offText="Off" />
           <StatusPill
-            label="Mic"
-            ok={nyra.micSupported}
-            okText="Ready"
-            offText="Unsupported browser"
+            label="Devices"
+            ok={devices?.status === "connected"}
+            okText="Home Assistant"
+            offText="Not connected"
           />
           <StatusPill
-            label="Isolation"
-            ok={nyra.settings.voiceIsolation}
-            okText="On"
-            offText="Off"
+            label="Mic"
+            ok={micSupported}
+            okText={nyra.audioReactive ? "Audio-reactive" : "Ready"}
+            offText="Unsupported browser"
           />
         </div>
 
         <ConversationPanel
           messages={nyra.messages}
           partial={nyra.partial}
-          disabled={nyra.state === "processing"}
+          disabled={nyra.state === "thinking"}
           onSend={(text) => void nyra.send(text)}
         />
 
         <p className="max-w-xl text-center text-xs leading-relaxed text-muted-foreground">
-          Nyra only listens when you start a session. Audio is processed in your browser and never
-          stored. Replies are generated by an external AI provider when configured.
+          Nyra only listens while you activate listening or hands-free mode. Audio is processed in
+          your browser and never stored. Replies are generated by an external AI provider when
+          configured.
         </p>
       </div>
     </NyraShell>

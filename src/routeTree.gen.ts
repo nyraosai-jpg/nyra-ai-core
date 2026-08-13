@@ -10,15 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
+import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TodayRouteImport } from './routes/today'
+import { Route as ApiDevicesRouteImport } from './routes/api/devices'
+import { Route as ApiDevicesIdRouteImport } from './routes/api/devices.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevicesRoute = DevicesRouteImport.update({
+  id: '/devices',
+  path: '/devices',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MemoryRoute = MemoryRouteImport.update({
@@ -46,48 +60,103 @@ const TodayRoute = TodayRouteImport.update({
   path: '/today',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDevicesRoute = ApiDevicesRouteImport.update({
+  id: '/api/devices',
+  path: '/api/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDevicesIdRoute = ApiDevicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiDevicesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
+  '/api/devices': typeof ApiDevicesRouteWithChildren
+  '/api/devices/$id': typeof ApiDevicesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
+  '/api/devices': typeof ApiDevicesRouteWithChildren
+  '/api/devices/$id': typeof ApiDevicesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
+  '/api/devices': typeof ApiDevicesRouteWithChildren
+  '/api/devices/$id': typeof ApiDevicesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/memory' | '/settings' | '/skills' | '/tasks' | '/today'
+  fullPaths:
+    | '/'
+    | '/activity'
+    | '/devices'
+    | '/memory'
+    | '/settings'
+    | '/skills'
+    | '/tasks'
+    | '/today'
+    | '/api/devices'
+    | '/api/devices/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/memory' | '/settings' | '/skills' | '/tasks' | '/today'
+  to:
+    | '/'
+    | '/activity'
+    | '/devices'
+    | '/memory'
+    | '/settings'
+    | '/skills'
+    | '/tasks'
+    | '/today'
+    | '/api/devices'
+    | '/api/devices/$id'
   id:
-    '__root__' | '/' | '/memory' | '/settings' | '/skills' | '/tasks' | '/today'
+    | '__root__'
+    | '/'
+    | '/activity'
+    | '/devices'
+    | '/memory'
+    | '/settings'
+    | '/skills'
+    | '/tasks'
+    | '/today'
+    | '/api/devices'
+    | '/api/devices/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
+  DevicesRoute: typeof DevicesRoute
   MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
   SkillsRoute: typeof SkillsRoute
   TasksRoute: typeof TasksRoute
   TodayRoute: typeof TodayRoute
+  ApiDevicesRoute: typeof ApiDevicesRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -97,6 +166,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/devices': {
+      id: '/devices'
+      path: '/devices'
+      fullPath: '/devices'
+      preLoaderRoute: typeof DevicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/memory': {
@@ -134,16 +217,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TodayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/devices': {
+      id: '/api/devices'
+      path: '/api/devices'
+      fullPath: '/api/devices'
+      preLoaderRoute: typeof ApiDevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/devices/$id': {
+      id: '/api/devices/$id'
+      path: '/$id'
+      fullPath: '/api/devices/$id'
+      preLoaderRoute: typeof ApiDevicesIdRouteImport
+      parentRoute: typeof ApiDevicesRoute
+    }
   }
 }
 
+interface ApiDevicesRouteChildren {
+  ApiDevicesIdRoute: typeof ApiDevicesIdRoute
+}
+
+const ApiDevicesRouteChildren: ApiDevicesRouteChildren = {
+  ApiDevicesIdRoute: ApiDevicesIdRoute,
+}
+
+const ApiDevicesRouteWithChildren = ApiDevicesRoute._addFileChildren(
+  ApiDevicesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
+  DevicesRoute: DevicesRoute,
   MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
   SkillsRoute: SkillsRoute,
   TasksRoute: TasksRoute,
   TodayRoute: TodayRoute,
+  ApiDevicesRoute: ApiDevicesRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

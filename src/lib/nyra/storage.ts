@@ -100,6 +100,9 @@ export const DEFAULT_SETTINGS: NyraSettings = {
   memoryEnabled: true,
   voiceOutputEnabled: true,
   voiceIsolation: true,
+  handsFree: false,
+  wakeWord: "nyra",
+  proactiveEnabled: false,
   language: "en-US",
   voiceId: "EXAVITQu4vr4xnSDxMaL",
 };

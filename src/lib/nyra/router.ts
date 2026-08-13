@@ -2,6 +2,13 @@
 // Skills are deterministic local capabilities. Anything not handled here
 // falls through to the AI brain (the CHAT skill).
 
+import {
+  isDeviceControl,
+  isDeviceStatus,
+  isSceneControl,
+  runDeviceControlSkill,
+  runDeviceStatusSkill,
+} from "./skills/devices";
 import { memoryStore, taskStore } from "./storage";
 import type { Intent, MemoryType, SkillResult } from "./types";
 
@@ -136,10 +143,41 @@ const planDay: Skill = {
 
 export const skills: Skill[] = [memorySave, memoryRecall, taskCreate, taskList, planDay];
 
-export function routeIntent(input: string): SkillResult {
+/** Registry metadata — also rendered on the Skills page. */
+export const skillRegistry = [
+  ...skills.map((s) => ({ name: s.name, description: s.description, kind: "local" as const })),
+  {
+    name: "Devices — control",
+    description: "Turns devices on/off, dims lights, sets temperature through the device service.",
+    kind: "device" as const,
+  },
+  {
+    name: "Devices — status",
+    description: "Reports the real state of connected devices.",
+    kind: "device" as const,
+  },
+  {
+    name: "Scenes",
+    description: "Activates scenes discovered from the connected bridge.",
+    kind: "device" as const,
+  },
+  {
+    name: "Chat",
+    description: "Everything else is answered by Nyra's brain, grounded in memory.",
+    kind: "ai" as const,
+  },
+];
+
+/** Async router: local skills first, then device skills, then the AI brain. */
+export async function routeIntent(input: string): Promise<SkillResult> {
   for (const skill of skills) {
-    if (skill.canHandle(input)) return skill.execute(input);
+    if (skill.canHandle(input)) {
+      const result = skill.execute(input);
+      return { ...result, memoryTouched: result.intent.startsWith("MEMORY") };
+    }
   }
+  if (isDeviceControl(input) || isSceneControl(input)) return runDeviceControlSkill(input);
+  if (isDeviceStatus(input)) return runDeviceStatusSkill(input);
   return { handled: false, intent: "CHAT" as Intent, text: "" };
 }
 
