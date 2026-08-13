@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Brain, CalendarDays, Home, ListTodo, Settings, Sparkles } from "lucide-react";
+import { Activity, Brain, Home, Lightbulb, ListTodo, Settings, Sparkles } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Home", icon: Home },
   { to: "/memory", label: "Memory", icon: Brain },
   { to: "/tasks", label: "Tasks", icon: ListTodo },
-  { to: "/today", label: "Today", icon: CalendarDays },
+  { to: "/devices", label: "Devices", icon: Lightbulb },
   { to: "/skills", label: "Skills", icon: Sparkles },
+  { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -29,14 +30,14 @@ export function NyraShell({ children }: { children: ReactNode }) {
         aria-label="Nyra sections"
         className="fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-nyra-panel backdrop-blur-xl"
       >
-        <ul className="mx-auto flex max-w-5xl items-center justify-between px-2 py-2 sm:justify-center sm:gap-4">
+        <ul className="mx-auto flex max-w-5xl items-center justify-between gap-1 overflow-x-auto px-2 py-2 sm:justify-center sm:gap-3">
           {nav.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <Link
                 to={to}
                 activeOptions={{ exact: to === "/" }}
                 activeProps={{ className: "text-primary" }}
-                className="flex min-h-14 min-w-14 flex-col items-center justify-center gap-1 rounded-xl px-3 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="flex min-h-14 min-w-12 shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-3 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
                 <span className="text-[11px]">{label}</span>
