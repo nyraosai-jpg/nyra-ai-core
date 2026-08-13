@@ -145,6 +145,11 @@ export interface NyraSettings {
   memoryEnabled: boolean;
   voiceOutputEnabled: boolean;
   voiceIsolation: boolean;
+  /** Hands-free: keep the mic open in this tab and wake on the wake word. */
+  handsFree: boolean;
+  wakeWord: string;
+  /** Architecture flag for future proactive suggestions. Off by default. */
+  proactiveEnabled: boolean;
   language: string;
   voiceId: string;
 }
@@ -157,6 +162,9 @@ export type Intent =
   | "TASK_LIST"
   | "TASK_COMPLETE"
   | "PLAN_DAY"
+  | "DEVICE_CONTROL"
+  | "DEVICE_STATUS"
+  | "SCENE_CONTROL"
   | "HELP"
   | "UNKNOWN";
 
