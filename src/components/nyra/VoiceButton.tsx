@@ -1,9 +1,9 @@
 import { Mic, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { VoiceState } from "@/lib/nyra/types";
+import type { OrbState } from "@/lib/nyra/types";
 
 interface Props {
-  state: VoiceState;
+  state: OrbState;
   disabled?: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -16,7 +16,7 @@ export function VoiceButton({ state, disabled, onStart, onStop }: Props) {
   return (
     <button
       type="button"
-      disabled={disabled || state === "processing"}
+      disabled={disabled || state === "thinking"}
       aria-label={listening ? "Stop listening" : "Start speaking to Nyra"}
       aria-pressed={listening}
       onClick={() => (listening || speaking ? onStop() : onStart())}
