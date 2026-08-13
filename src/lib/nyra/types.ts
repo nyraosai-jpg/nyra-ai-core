@@ -173,4 +173,8 @@ export interface SkillResult {
   text: string;
   handled: boolean;
   intent: Intent;
+  /** Set when a real device action was confirmed — drives the orb pulse. */
+  deviceActive?: boolean;
+  /** Set when memory was written or recalled. */
+  memoryTouched?: boolean;
 }
