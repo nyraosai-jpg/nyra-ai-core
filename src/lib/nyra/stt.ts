@@ -10,6 +10,10 @@ export interface SpeechRecognizer {
 
 export interface RecognizerOptions {
   language: string;
+  /** Keep the mic open and restart after each utterance (hands-free mode). */
+  continuous?: boolean;
+  /** Receives the live isolated stream so callers can measure amplitude. */
+  onStream?: (stream: MediaStream) => void;
   /** Enables the isolation audio chain: echo cancellation + noise suppression. */
   isolation: boolean;
   onPartial: (text: string) => void;
@@ -63,6 +67,7 @@ export function createRecognizer(options: RecognizerOptions): SpeechRecognizer {
   let instance: SpeechRecognitionLike | null = null;
   let stream: MediaStream | null = null;
   let finalText = "";
+  let manualStop = false;
 
   const releaseStream = () => {
     stream?.getTracks().forEach((t) => t.stop());
@@ -87,10 +92,12 @@ export function createRecognizer(options: RecognizerOptions): SpeechRecognizer {
         return;
       }
 
+      options.onStream?.(stream);
+      manualStop = false;
       finalText = "";
       instance = new Engine();
       instance.lang = options.language;
-      instance.continuous = false;
+      instance.continuous = Boolean(options.continuous);
       instance.interimResults = true;
       instance.maxAlternatives = 1;
 
@@ -121,14 +128,25 @@ export function createRecognizer(options: RecognizerOptions): SpeechRecognizer {
       };
 
       instance.onend = () => {
-        releaseStream();
         const text = finalText.trim();
+        finalText = "";
         if (text) options.onFinal(text);
+        if (options.continuous && !manualStop) {
+          // Hands-free: keep the session alive without re-prompting the user.
+          try {
+            instance?.start();
+            return;
+          } catch {
+            /* fall through to release */
+          }
+        }
+        releaseStream();
       };
 
       instance.start();
     },
     stop() {
+      manualStop = true;
       instance?.stop();
       releaseStream();
     },
