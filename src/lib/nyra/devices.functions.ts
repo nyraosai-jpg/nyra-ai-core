@@ -78,6 +78,52 @@ export const getIntegrationStatus = createServerFn({ method: "GET" }).handler(
         envKeys: ["HOME_ASSISTANT_URL", "HOME_ASSISTANT_TOKEN"],
       },
       {
+        id: "google_calendar",
+        name: "Google Calendar",
+        category: "productivity",
+        status:
+          process.env["LOVABLE_API_KEY"] && process.env["GOOGLE_CALENDAR_API_KEY"]
+            ? "connected"
+            : "not_configured",
+        detail: "Sign in with Google — no tokens to copy",
+        envKeys: [],
+      },
+      {
+        id: "spotify",
+        name: "Spotify",
+        category: "media",
+        status:
+          process.env["LOVABLE_API_KEY"] && process.env["SPOTIFY_API_KEY"]
+            ? "connected"
+            : "not_configured",
+        detail: "Account sign-in — plays on your own devices",
+        envKeys: [],
+      },
+      {
+        id: "search",
+        name: "Web search",
+        category: "context",
+        status: "connected",
+        detail: "Live search, no key required",
+        envKeys: [],
+      },
+      {
+        id: "weather",
+        name: "Weather",
+        category: "context",
+        status: "connected",
+        detail: "Open-Meteo, uses your location only when shared",
+        envKeys: [],
+      },
+      {
+        id: "location",
+        name: "Location",
+        category: "context",
+        status: "connected",
+        detail: "Browser location, stored on this device only",
+        envKeys: [],
+      },
+      {
         id: "matter",
         name: "Matter",
         category: "devices",
@@ -93,18 +139,7 @@ export const getIntegrationStatus = createServerFn({ method: "GET" }).handler(
         detail: "Camera stays off until explicitly enabled",
         envKeys: [],
       },
-      {
-        id: "calendar",
-        name: "Google Calendar",
-        category: "productivity",
-        status: "planned",
-        envKeys: [],
-      },
       { id: "gmail", name: "Gmail", category: "productivity", status: "planned", envKeys: [] },
-      { id: "spotify", name: "Spotify", category: "media", status: "planned", envKeys: [] },
-      { id: "weather", name: "Weather", category: "context", status: "planned", envKeys: [] },
-      { id: "location", name: "Location", category: "context", status: "planned", envKeys: [] },
-      { id: "search", name: "Web search", category: "context", status: "planned", envKeys: [] },
     ];
   },
 );

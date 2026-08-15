@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { nyraReply } from "@/lib/nyra/ai.functions";
+import { nyraConfirm, nyraTurn, type NyraReply } from "@/lib/nyra/ai.functions";
 import { nyraSpeak } from "@/lib/nyra/tts.functions";
-import { buildMemoryContext, routeIntent } from "@/lib/nyra/router";
-import { conversationStore, settingsStore, uid } from "@/lib/nyra/storage";
+import { routeIntent } from "@/lib/nyra/router";
+import { conversationStore, memoryStore, settingsStore, taskStore, uid } from "@/lib/nyra/storage";
+import { locationStore, requestLocation } from "@/lib/nyra/location";
 import { createRecognizer, isSpeechRecognitionSupported } from "@/lib/nyra/stt";
 import { activityLog } from "@/lib/nyra/activity";
 import { meterAudioElement, meterMicrophone, type AmplitudeMeter } from "@/lib/nyra/audio";
@@ -37,6 +38,7 @@ export function useNyra(status: NyraStatusInfo) {
   const [level, setLevel] = useState(0);
   const [audioReactive, setAudioReactive] = useState(false);
   const [settings, setSettings] = useState<NyraSettings>(() => settingsStore.get());
+  const [pending, setPending] = useState<NyraReply["pending"] | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const meterRef = useRef<AmplitudeMeter | null>(null);
@@ -101,6 +103,72 @@ export function useNyra(status: NyraStatusInfo) {
     [settings.voiceOutputEnabled, settings.voiceId, status.ttsConfigured, stopMeter],
   );
 
+  const buildContext = useCallback(() => {
+    const loc = locationStore.get();
+    return {
+      nowISO: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      ...(loc ? { location: { latitude: loc.latitude, longitude: loc.longitude, ...(loc.label ? { label: loc.label } : {}) } } : {}),
+      memories: settings.memoryEnabled ? memoryStore.all().slice(0, 20).map((m) => m.content) : [],
+      tasks: taskStore
+        .all()
+        .filter((t) => t.status === "open")
+        .slice(0, 20)
+        .map((t) => ({ id: t.id, title: t.title, priority: t.priority, status: t.status })),
+    };
+  }, [settings.memoryEnabled]);
+
+  const applyClientActions = useCallback((actions: NonNullable<NyraReply["clientActions"]>) => {
+    for (const action of actions) {
+      if (action.type === "remember") {
+        memoryStore.add({ type: "facts", content: action.content, importance: 2 });
+        activityLog.push("memory", "Remembered something new.", action.content.slice(0, 90));
+      } else if (action.type === "add_task") {
+        taskStore.add({ title: action.title, priority: action.priority });
+        activityLog.push("task", `Added task: ${action.title}`);
+      } else if (action.type === "complete_task") {
+        taskStore.toggle(action.id);
+        activityLog.push("task", "Task completed.");
+      } else if (action.type === "request_location") {
+        void requestLocation().then((loc) => {
+          if (loc) activityLog.push("system", "Location shared with Nyra.");
+        });
+      }
+    }
+  }, []);
+
+  const deliver = useCallback(
+    async (result: NyraReply, appendTo: Message[]) => {
+      if (result.clientActions?.length) applyClientActions(result.clientActions);
+      if (result.error) {
+        setError(result.error);
+        activityLog.push("error", result.error);
+        setState("error");
+        return;
+      }
+      if (result.toolsUsed?.length) {
+        activityLog.push("system", `Used ${result.toolsUsed.join(", ")}.`);
+      }
+      if (result.deviceActive) setState("device_active");
+      else if (result.memoryTouched) setState("memory");
+
+      const reply: Message = {
+        id: uid(),
+        role: "nyra",
+        content: result.text,
+        createdAt: Date.now(),
+        demo: result.demo,
+      };
+      const next = persist([...appendTo, reply]);
+      setMessages(next);
+      setPending(result.pending ?? null);
+      await speak(result.text);
+      setState((s) => (s === "speaking" ? s : "idle"));
+      return next;
+    },
+    [applyClientActions, persist, speak],
+  );
+
   const send = useCallback(
     async (input: string) => {
       const content = input.trim();
@@ -110,39 +178,44 @@ export function useNyra(status: NyraStatusInfo) {
       activityLog.push("understanding", "Understanding request…", content.slice(0, 90));
 
       const userMessage: Message = { id: uid(), role: "user", content, createdAt: Date.now() };
-      let next = persist([...conversationStore.all(), userMessage]);
+      const next = persist([...conversationStore.all(), userMessage]);
       setMessages(next);
       setState("thinking");
 
-      // 1) Local + device skill routing runs first.
-      const routed = await routeIntent(content);
-      if (routed.handled) {
-        if (routed.deviceActive) {
-          setState("device_active");
-          activityLog.push("device", routed.text);
-        } else if (routed.memoryTouched) {
-          setState("memory");
-          activityLog.push("memory", routed.text.slice(0, 90));
-        } else {
-          activityLog.push("system", routed.text.slice(0, 90));
+      // A pending change waits for a plain yes or no — nothing is altered silently.
+      if (pending) {
+        const yes = /^(yes|yeah|yep|yup|sure|do it|go ahead|confirm|please do|ok|okay)\b/i.test(content);
+        const no = /^(no|nope|cancel|stop|don'?t|nevermind|never mind)\b/i.test(content);
+        if (yes || no) {
+          const current = pending;
+          setPending(null);
+          if (no) {
+            await deliver(
+              { text: "Cancelled — nothing was changed.", demo: false, clientActions: [] },
+              next,
+            );
+            return;
+          }
+          const result = await nyraConfirm({
+            data: { tool: current.tool, argsJson: current.argsJson, context: buildContext() },
+          });
+          activityLog.push("system", `Confirmed: ${current.summary}`);
+          await deliver(result, next);
+          return;
         }
-        const reply: Message = {
-          id: uid(),
-          role: "nyra",
-          content: routed.text,
-          createdAt: Date.now(),
-        };
-        next = persist([...next, reply]);
-        setMessages(next);
-        await new Promise((r) => setTimeout(r, routed.deviceActive ? 600 : 250));
-        await speak(routed.text);
-        setState((s) => (s === "speaking" ? s : "idle"));
-        return;
+        setPending(null);
       }
 
-      // 2) Otherwise the brain answers, grounded in memory.
+      if (!status.aiConfigured) {
+        const routed = await routeIntent(content);
+        if (routed.handled) {
+          await deliver({ text: routed.text, demo: false, clientActions: [] }, next);
+          return;
+        }
+      }
+
       try {
-        activityLog.push("thinking", "Reasoning with Groq…");
+        activityLog.push("thinking", "Reasoning…");
         const history = next
           .filter((m) => m.role !== "system")
           .slice(-12)
@@ -151,36 +224,15 @@ export function useNyra(status: NyraStatusInfo) {
             content: m.content,
           }));
 
-        const memoryContext = settings.memoryEnabled ? buildMemoryContext() : "";
-        const result = await nyraReply({
-          data: memoryContext ? { messages: history, memoryContext } : { messages: history },
-        });
-
-        if (result.error) {
-          setError(result.error);
-          activityLog.push("error", result.error);
-          setState("error");
-          return;
-        }
-
-        const reply: Message = {
-          id: uid(),
-          role: "nyra",
-          content: result.text,
-          createdAt: Date.now(),
-          demo: result.demo,
-        };
-        next = persist([...next, reply]);
-        setMessages(next);
-        await speak(result.text);
-        setState((s) => (s === "speaking" ? s : "idle"));
+        const result = await nyraTurn({ data: { messages: history, context: buildContext() } });
+        await deliver(result, next);
       } catch {
         setError("Nyra couldn't reach the service. Please try again.");
         activityLog.push("error", "Nyra couldn't reach the service.");
         setState("error");
       }
     },
-    [persist, settings.memoryEnabled, speak],
+    [buildContext, deliver, pending, persist, status.aiConfigured],
   );
 
   const beginRecognition = useCallback(
@@ -286,6 +338,33 @@ export function useNyra(status: NyraStatusInfo) {
     setError(null);
   }, []);
 
+  const confirmPending = useCallback(async () => {
+    if (!pending) return;
+    const current = pending;
+    setPending(null);
+    setState("thinking");
+    const result = await nyraConfirm({
+      data: { tool: current.tool, argsJson: current.argsJson, context: buildContext() },
+    });
+    activityLog.push("system", `Confirmed: ${current.summary}`);
+    await deliver(result, conversationStore.all());
+  }, [buildContext, deliver, pending]);
+
+  const cancelPending = useCallback(() => {
+    setPending(null);
+    activityLog.push("system", "Change cancelled — nothing was modified.");
+    setState("idle");
+  }, []);
+
+  const askLocation = useCallback(async () => {
+    const loc = await requestLocation();
+    activityLog.push(
+      "system",
+      loc ? "Location shared with Nyra." : "Location permission was declined.",
+    );
+    return loc;
+  }, []);
+
   const updateSettings = useCallback((patch: Partial<NyraSettings>) => {
     settingsStore.set(patch);
     setSettings(settingsStore.get());
@@ -307,6 +386,10 @@ export function useNyra(status: NyraStatusInfo) {
     stopListening,
     stopSpeaking,
     setHandsFree,
+    pending,
+    confirmPending,
+    cancelPending,
+    askLocation,
     clearConversation,
     updateSettings,
   };

@@ -25,23 +25,23 @@ function DevicesPage() {
         <div className="space-y-5 py-6">
           <h1 className="text-2xl font-light tracking-tight">Devices</h1>
           <section className="rounded-2xl border border-border/60 bg-nyra-panel p-6">
-            <h2 className="text-lg">Connect your home</h2>
+            <h2 className="text-lg">Connect your things</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Nyra can connect to compatible devices through Home Assistant — lights, thermostats,
-              fans, TVs, speakers, locks and sensors.
+              No tokens needed. Anything with an account — Spotify today, Hue, Tuya, LIFX and
+              Google Home next — connects by signing in once, and Nyra controls it by voice.
             </p>
             <p className="mt-4 text-sm text-muted-foreground">
-              Set <code className="text-foreground">HOME_ASSISTANT_URL</code> and{" "}
-              <code className="text-foreground">HOME_ASSISTANT_TOKEN</code> as server-side secrets.
-              They are never sent to the browser.
+              Lights and plugs that only live on your local network can't be reached from a browser
+              tab. When you host Nyra on your laptop, a small local bridge unlocks those — it plugs
+              into this same device layer, no configuration in the app.
             </p>
             <p className="mt-4 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Status: {result.reason === "not_configured" ? "Not connected" : "Configured but unreachable"}
+              Status: {result.reason === "not_configured" ? "No bridge connected" : "Bridge unreachable"}
             </p>
           </section>
           <p className="text-xs text-muted-foreground">
-            The device layer is bridge-agnostic — Matter and other integrations can be added behind
-            the same abstraction later.
+            The device layer is bridge-agnostic, so account-based and local devices appear side by
+            side once connected.
           </p>
         </div>
       </NyraShell>

@@ -6,6 +6,8 @@ import { NyraStatus } from "@/components/nyra/NyraStatus";
 import { VoiceButton } from "@/components/nyra/VoiceButton";
 import { ConversationPanel } from "@/components/nyra/ConversationPanel";
 import { StatusPill } from "@/components/nyra/SystemStatus";
+import { ConfirmCard } from "@/components/nyra/ConfirmCard";
+import { locationStore } from "@/lib/nyra/location";
 import { useNyra } from "@/hooks/useNyra";
 import { getNyraStatus } from "@/lib/nyra/ai.functions";
 import { getIntegrationStatus } from "@/lib/nyra/devices.functions";
@@ -48,10 +50,12 @@ function HomePage() {
   const nyra = useNyra(status);
   const [hello, setHello] = useState("Hello.");
   const [micSupported, setMicSupported] = useState(false);
+  const [hasLocation, setHasLocation] = useState(false);
 
   useEffect(() => {
     setHello(greeting());
     setMicSupported(nyra.micSupported);
+    setHasLocation(Boolean(locationStore.get()));
   }, [nyra.micSupported]);
 
   const devices = integrations.find((i) => i.id === "home_assistant");
@@ -67,6 +71,14 @@ function HomePage() {
         <NyraOrb state={nyra.state} level={nyra.level} />
 
         <NyraStatus label={nyra.statusLabel} detail={nyra.partial || undefined} />
+
+        {nyra.pending ? (
+          <ConfirmCard
+            summary={nyra.pending.summary}
+            onConfirm={() => void nyra.confirmPending()}
+            onCancel={nyra.cancelPending}
+          />
+        ) : null}
 
         <div className="flex flex-col items-center gap-3">
           <VoiceButton
@@ -86,6 +98,17 @@ function HomePage() {
           >
             {nyra.settings.handsFree ? "Hands-free on" : "Hands-free off"}
           </button>
+          {!hasLocation ? (
+            <button
+              type="button"
+              onClick={() =>
+                void nyra.askLocation().then((loc) => setHasLocation(Boolean(loc)))
+              }
+              className="min-h-10 rounded-full border border-border/60 bg-nyra-panel px-4 text-xs uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:border-primary/60 hover:text-foreground"
+            >
+              Share location
+            </button>
+          ) : null}
           <p className="max-w-xs text-center text-[11px] text-muted-foreground">
             {nyra.settings.handsFree
               ? `Say “${nyra.settings.wakeWord}” followed by your request. Only works while this tab is open.`
@@ -108,9 +131,28 @@ function HomePage() {
           />
           <StatusPill label="Memory" ok okText="Online" offText="Off" />
           <StatusPill
+            label="Calendar"
+            ok={status.calendarConnected}
+            okText="Google connected"
+            offText="Not connected"
+          />
+          <StatusPill label="Search" ok okText="Live web" offText="Off" />
+          <StatusPill
+            label="Location"
+            ok={hasLocation}
+            okText="Shared"
+            offText="Not shared"
+          />
+          <StatusPill
+            label="Music"
+            ok={status.musicConnected}
+            okText="Spotify"
+            offText="Not connected"
+          />
+          <StatusPill
             label="Devices"
             ok={devices?.status === "connected"}
-            okText="Home Assistant"
+            okText="Bridge online"
             offText="Not connected"
           />
           <StatusPill
