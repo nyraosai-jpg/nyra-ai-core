@@ -145,25 +145,45 @@ export const skills: Skill[] = [memorySave, memoryRecall, taskCreate, taskList, 
 
 /** Registry metadata — also rendered on the Skills page. */
 export const skillRegistry = [
-  ...skills.map((s) => ({ name: s.name, description: s.description, kind: "local" as const })),
   {
-    name: "Devices — control",
-    description: "Turns devices on/off, dims lights, sets temperature through the device service.",
+    name: "Calendar",
+    description:
+      "Reads your Google Calendar, spots conflicts, and creates, moves or cancels events after you approve.",
+    kind: "ai" as const,
+  },
+  {
+    name: "Web search",
+    description: "Searches the live web for anything you ask, and summarises the sources.",
+    kind: "ai" as const,
+  },
+  {
+    name: "Weather",
+    description: "Current conditions and the next two days, from your shared location or any city.",
+    kind: "ai" as const,
+  },
+  {
+    name: "Memory",
+    description: "Saves durable facts about you automatically and recalls them in every answer.",
+    kind: "local" as const,
+  },
+  {
+    name: "Tasks & planning",
+    description: "Captures tasks by voice, completes them, and briefs you on the day.",
+    kind: "local" as const,
+  },
+  {
+    name: "Music",
+    description: "Plays, pauses and skips on your Spotify account once connected.",
     kind: "device" as const,
   },
   {
-    name: "Devices — status",
-    description: "Reports the real state of connected devices.",
-    kind: "device" as const,
-  },
-  {
-    name: "Scenes",
-    description: "Activates scenes discovered from the connected bridge.",
+    name: "Devices",
+    description: "Controls connected devices and scenes through the bridge-agnostic device layer.",
     kind: "device" as const,
   },
   {
     name: "Chat",
-    description: "Everything else is answered by Nyra's brain, grounded in memory.",
+    description: "Everything else is answered by Nyra's brain, grounded in memory and live tools.",
     kind: "ai" as const,
   },
 ];

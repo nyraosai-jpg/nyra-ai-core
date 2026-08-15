@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { NyraShell } from "@/components/nyra/NyraShell";
 import { getNyraStatus } from "@/lib/nyra/ai.functions";
 import { conversationStore, settingsStore } from "@/lib/nyra/storage";
+import { locationStore, requestLocation } from "@/lib/nyra/location";
 import { isSpeechRecognitionSupported } from "@/lib/nyra/stt";
 import type { NyraSettings } from "@/lib/nyra/types";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,13 @@ function SettingsPage() {
   const status = Route.useLoaderData();
   const [settings, setSettings] = useState<NyraSettings>(() => settingsStore.get());
   const [micSupported, setMicSupported] = useState(false);
+  const [locationLabel, setLocationLabel] = useState("Not shared");
 
   useEffect(() => {
     setSettings(settingsStore.get());
     setMicSupported(isSpeechRecognitionSupported());
+    const loc = locationStore.get();
+    setLocationLabel(loc ? loc.label ?? `${loc.latitude}, ${loc.longitude}` : "Not shared");
   }, []);
 
   const update = (patch: Partial<NyraSettings>) => {
@@ -110,14 +114,48 @@ function SettingsPage() {
           </button>
         </Section>
 
-        <Section title="Privacy">
+        <Section title="Connections">
+          <Row label="Google Calendar" value={status.calendarConnected ? "Connected" : "Not connected"} />
+          <Row label="Spotify" value={status.musicConnected ? "Connected" : "Not connected"} />
+          <Row label="Web search" value="Live" />
+          <Row label="Location" value={locationLabel} />
+          <button
+            type="button"
+            onClick={async () => {
+              const loc = await requestLocation();
+              setLocationLabel(loc ? `${loc.latitude}, ${loc.longitude}` : "Permission declined");
+            }}
+            className="mt-2 min-h-10 rounded-xl border border-border/60 bg-secondary px-4 text-sm text-secondary-foreground hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Share location
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              locationStore.clear();
+              setLocationLabel("Not shared");
+            }}
+            className="ml-2 mt-2 min-h-10 rounded-xl border border-border/60 px-4 text-sm text-muted-foreground hover:border-destructive/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Forget location
+          </button>
+        </Section>
+
+        <Section title="Privacy & protection">
           <p className="text-sm text-muted-foreground">
-            Memories, tasks and conversation are stored locally in this browser. Audio is
-            transcribed by your browser's speech engine and is not saved. When configured, message
-            text is sent to Groq for reasoning and to ElevenLabs for speech. API keys stay
-            server-side and are never exposed to the browser.
+            Memories, tasks, conversation and your location are stored locally in this browser.
+            Audio is transcribed by your browser's speech engine and is not saved. Message text is
+            sent to Groq for reasoning and to ElevenLabs for speech. All API keys and account
+            connections stay server-side and are never exposed to the browser.
+          </p>
+          <p className="pt-2 text-sm text-muted-foreground">
+            Every action that changes something — a calendar edit, a device command — is described
+            and approved before it runs, and logged in Activity. Web pages and calendar content are
+            treated as untrusted data, so a malicious page can't instruct Nyra to act on your
+            behalf.
           </p>
         </Section>
+
 
         <Section title="Appearance">
           <Row label="Theme" value="Midnight (default)" />
