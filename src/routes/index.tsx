@@ -111,7 +111,7 @@ function HomePage() {
           ) : null}
           <p className="max-w-xs text-center text-[11px] text-muted-foreground">
             {nyra.settings.handsFree
-              ? `Say “${nyra.settings.wakeWord}” followed by your request. Only works while this tab is open.`
+              ? `Just say “${nyra.settings.wakeWord}” — no button needed. She keeps listening for her name while this tab is open, and wakes automatically next time you open her.`
               : "Turn on hands-free to wake Nyra with your voice."}
           </p>
         </div>
