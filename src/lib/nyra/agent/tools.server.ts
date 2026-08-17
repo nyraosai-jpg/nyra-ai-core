@@ -267,6 +267,10 @@ export function describeWrite(name: string, args: Record<string, unknown>): stri
       }${args["title"] ? `, retitled “${args["title"]}”` : ""}`;
     case "calendar_delete_event":
       return `Cancel “${args["eventTitle"] ?? args["eventId"]}”`;
+    case "social_post":
+      return `Post to ${
+        typeof args["platform"] === "string" ? args["platform"] : "social"
+      }: “${String(args["text"] ?? "").slice(0, 220)}”`;
     default:
       return `Run ${name}`;
   }
