@@ -341,6 +341,14 @@ export function useNyra(status: NyraStatusInfo) {
       } catch {
         return; // permissions API unavailable — wait for the user to tap once
       }
+      try {
+        // Quiet probe: confirm a real mic is available before auto-starting,
+        // so a missing device never lands the orb in an error state on load.
+        const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+        probe.getTracks().forEach((t) => t.stop());
+      } catch {
+        return;
+      }
       if (cancelled || recognizerRef.current) return;
       handsFreeRef.current = true;
       await beginRecognition(true);
