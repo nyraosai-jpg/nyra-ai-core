@@ -100,6 +100,37 @@ export const getIntegrationStatus = createServerFn({ method: "GET" }).handler(
         envKeys: [],
       },
       {
+        id: "x",
+        name: "X (Twitter)",
+        category: "media",
+        status:
+          process.env["LOVABLE_API_KEY"] && process.env["X_API_KEY"] ? "connected" : "not_configured",
+        detail: "Reads your posts; publishes only with your approval",
+        envKeys: [],
+      },
+      {
+        id: "linkedin",
+        name: "LinkedIn",
+        category: "media",
+        status:
+          process.env["LOVABLE_API_KEY"] && process.env["LINKEDIN_API_KEY"]
+            ? "connected"
+            : "not_configured",
+        detail: "Drafts and posts updates after you approve",
+        envKeys: [],
+      },
+      {
+        id: "telegram",
+        name: "Telegram",
+        category: "media",
+        status:
+          process.env["LOVABLE_API_KEY"] && process.env["TELEGRAM_API_KEY"]
+            ? "connected"
+            : "not_configured",
+        detail: "Broadcasts to your saved chat after you approve",
+        envKeys: ["TELEGRAM_CHAT_ID"],
+      },
+      {
         id: "search",
         name: "Web search",
         category: "context",

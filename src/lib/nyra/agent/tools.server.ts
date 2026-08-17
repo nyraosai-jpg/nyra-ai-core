@@ -3,6 +3,7 @@
 
 import * as calendar from "../tools/calendar.server";
 import * as spotify from "../tools/spotify.server";
+import * as social from "../tools/social.server";
 import { getWeather } from "../tools/weather.server";
 import { webSearch } from "../tools/search.server";
 
@@ -186,6 +187,53 @@ export const TOOLS: ToolDef[] = [
     ),
     available: spotify.spotifyConnected,
   },
+  {
+    name: "social_accounts",
+    description:
+      "List the user's social accounts with their real connection status and handles. Use before drafting or posting so you never assume an account exists.",
+    parameters: obj({}),
+    available: () => true,
+  },
+  {
+    name: "social_read",
+    description:
+      "Read the user's recent posts on a connected social platform. Read-only, never posts.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        limit: num("How many recent posts, 1 to 10."),
+      },
+      ["platform"],
+    ),
+    available: () => social.socialConnected(),
+  },
+  {
+    name: "social_draft",
+    description:
+      "Write a draft social post for the user to read or edit. This never publishes anything — use it whenever the user asks for a post, caption or update.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        text: str("The drafted post, in the user's voice."),
+      },
+      ["platform", "text"],
+    ),
+    available: () => true,
+  },
+  {
+    name: "social_post",
+    description:
+      "Publish a post to a connected social account. Requires the user's explicit confirmation; draft it first.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        text: str("Exact text to publish."),
+      },
+      ["platform", "text"],
+    ),
+    requiresConfirmation: true,
+    available: () => social.socialConnected(),
+  },
 ];
 
 export function availableTools() {
@@ -219,6 +267,10 @@ export function describeWrite(name: string, args: Record<string, unknown>): stri
       }${args["title"] ? `, retitled “${args["title"]}”` : ""}`;
     case "calendar_delete_event":
       return `Cancel “${args["eventTitle"] ?? args["eventId"]}”`;
+    case "social_post":
+      return `Post to ${
+        typeof args["platform"] === "string" ? args["platform"] : "social"
+      }: “${String(args["text"] ?? "").slice(0, 220)}”`;
     default:
       return `Run ${name}`;
   }
@@ -349,6 +401,35 @@ export async function executeTool(
         deviceActive: true,
       };
     }
+
+    case "social_accounts":
+      return { result: { ok: true, accounts: await social.socialAccounts() }, clientActions };
+
+    case "social_read": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      return { result: await social.socialFeed(platform, n("limit") ?? 5), clientActions };
+    }
+
+    case "social_draft": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      const text = s("text") ?? "";
+      return {
+        result: {
+          ok: Boolean(text),
+          draft: true,
+          platform,
+          text,
+          note: "Draft only. Nothing was published. Read it to the user and ask if they want it posted.",
+        },
+        clientActions,
+      };
+    }
+
+    case "social_post": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      return { result: await social.socialPost(platform, s("text") ?? ""), clientActions };
+    }
+
 
     default:
       return { result: { ok: false, error: `Unknown tool ${name}` }, clientActions };

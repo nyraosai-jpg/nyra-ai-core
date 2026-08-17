@@ -9,6 +9,9 @@ export function connectorKey(connectorId: string): string | undefined {
   const map: Record<string, string> = {
     google_calendar: "GOOGLE_CALENDAR_API_KEY",
     spotify: "SPOTIFY_API_KEY",
+    x: "X_API_KEY",
+    linkedin: "LINKEDIN_API_KEY",
+    telegram: "TELEGRAM_API_KEY",
   };
   const envName = map[connectorId];
   return envName ? process.env[envName] : undefined;
