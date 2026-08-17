@@ -187,6 +187,53 @@ export const TOOLS: ToolDef[] = [
     ),
     available: spotify.spotifyConnected,
   },
+  {
+    name: "social_accounts",
+    description:
+      "List the user's social accounts with their real connection status and handles. Use before drafting or posting so you never assume an account exists.",
+    parameters: obj({}),
+    available: () => true,
+  },
+  {
+    name: "social_read",
+    description:
+      "Read the user's recent posts on a connected social platform. Read-only, never posts.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        limit: num("How many recent posts, 1 to 10."),
+      },
+      ["platform"],
+    ),
+    available: () => social.socialConnected(),
+  },
+  {
+    name: "social_draft",
+    description:
+      "Write a draft social post for the user to read or edit. This never publishes anything — use it whenever the user asks for a post, caption or update.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        text: str("The drafted post, in the user's voice."),
+      },
+      ["platform", "text"],
+    ),
+    available: () => true,
+  },
+  {
+    name: "social_post",
+    description:
+      "Publish a post to a connected social account. Requires the user's explicit confirmation; draft it first.",
+    parameters: obj(
+      {
+        platform: { type: "string", enum: ["x", "linkedin", "telegram"] },
+        text: str("Exact text to publish."),
+      },
+      ["platform", "text"],
+    ),
+    requiresConfirmation: true,
+    available: () => social.socialConnected(),
+  },
 ];
 
 export function availableTools() {
