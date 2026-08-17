@@ -3,6 +3,7 @@
 
 import * as calendar from "../tools/calendar.server";
 import * as spotify from "../tools/spotify.server";
+import * as social from "../tools/social.server";
 import { getWeather } from "../tools/weather.server";
 import { webSearch } from "../tools/search.server";
 
