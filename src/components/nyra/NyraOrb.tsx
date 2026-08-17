@@ -10,6 +10,17 @@ const PARTICLES = [
   { size: 4, radius: 60, duration: 30, delay: -22 },
 ];
 
+const STARS = [
+  { top: 18, left: 26, size: 2, delay: 0, duration: 4 },
+  { top: 30, left: 72, size: 1.5, delay: 1.2, duration: 5 },
+  { top: 62, left: 20, size: 2.5, delay: 2.1, duration: 3.6 },
+  { top: 74, left: 66, size: 1.5, delay: 0.6, duration: 4.8 },
+  { top: 44, left: 84, size: 2, delay: 3, duration: 5.4 },
+  { top: 22, left: 52, size: 1.5, delay: 2.6, duration: 4.2 },
+  { top: 84, left: 42, size: 2, delay: 1.8, duration: 6 },
+  { top: 54, left: 12, size: 1.5, delay: 3.4, duration: 4.4 },
+];
+
 const ringSpeed: Record<OrbState, string> = {
   idle: "8s",
   listening: "2.2s",
