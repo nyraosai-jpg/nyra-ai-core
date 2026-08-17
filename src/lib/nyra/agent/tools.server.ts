@@ -402,6 +402,35 @@ export async function executeTool(
       };
     }
 
+    case "social_accounts":
+      return { result: { ok: true, accounts: await social.socialAccounts() }, clientActions };
+
+    case "social_read": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      return { result: await social.socialFeed(platform, n("limit") ?? 5), clientActions };
+    }
+
+    case "social_draft": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      const text = s("text") ?? "";
+      return {
+        result: {
+          ok: Boolean(text),
+          draft: true,
+          platform,
+          text,
+          note: "Draft only. Nothing was published. Read it to the user and ask if they want it posted.",
+        },
+        clientActions,
+      };
+    }
+
+    case "social_post": {
+      const platform = (s("platform") ?? "x") as "x" | "linkedin" | "telegram";
+      return { result: await social.socialPost(platform, s("text") ?? ""), clientActions };
+    }
+
+
     default:
       return { result: { ok: false, error: `Unknown tool ${name}` }, clientActions };
   }
