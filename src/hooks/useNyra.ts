@@ -337,9 +337,9 @@ export function useNyra(status: NyraStatusInfo) {
       try {
         const perms = (navigator as Navigator & { permissions?: Permissions }).permissions;
         const status = await perms?.query({ name: "microphone" as PermissionName });
-        if (status && status.state === "denied") return;
+        if (!status || status.state !== "granted") return; // wait for an explicit grant
       } catch {
-        /* permissions API unavailable — try anyway */
+        return; // permissions API unavailable — wait for the user to tap once
       }
       if (cancelled || recognizerRef.current) return;
       handsFreeRef.current = true;
