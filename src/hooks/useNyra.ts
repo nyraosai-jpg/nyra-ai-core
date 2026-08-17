@@ -323,6 +323,43 @@ export function useNyra(status: NyraStatusInfo) {
     [beginRecognition, stopMeter],
   );
 
+  /**
+   * Hands-free auto-wake: if the user left hands-free on and the microphone
+   * permission is already granted, Nyra starts listening for her wake word as
+   * soon as the app loads — no button press required.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    const resume = async () => {
+      if (!settingsStore.get().handsFree) return;
+      if (!isSpeechRecognitionSupported()) return;
+      if (recognizerRef.current) return;
+      try {
+        const perms = (navigator as Navigator & { permissions?: Permissions }).permissions;
+        const status = await perms?.query({ name: "microphone" as PermissionName });
+        if (!status || status.state !== "granted") return; // wait for an explicit grant
+      } catch {
+        return; // permissions API unavailable — wait for the user to tap once
+      }
+      try {
+        // Quiet probe: confirm a real mic is available before auto-starting,
+        // so a missing device never lands the orb in an error state on load.
+        const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+        probe.getTracks().forEach((t) => t.stop());
+      } catch {
+        return;
+      }
+      if (cancelled || recognizerRef.current) return;
+      handsFreeRef.current = true;
+      await beginRecognition(true);
+    };
+    void resume();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(
     () => () => {
       recognizerRef.current?.stop();

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { Activity, Brain, Home, Lightbulb, ListTodo, Settings, Share2, Sparkles } from "lucide-react";
+import { Starfield } from "@/components/nyra/Starfield";
 
 const nav = [
   { to: "/", label: "Home", icon: Home },
@@ -17,6 +18,7 @@ export function NyraShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       <div className="pointer-events-none absolute inset-0 bg-nyra-aurora" aria-hidden="true" />
+      <Starfield count={110} className="fixed inset-0 z-0" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 pb-28 pt-6 sm:px-6">
         <header className="flex items-center justify-between">
           <Link to="/" className="group inline-flex items-baseline gap-2">

@@ -10,6 +10,17 @@ const PARTICLES = [
   { size: 4, radius: 60, duration: 30, delay: -22 },
 ];
 
+const STARS = [
+  { top: 18, left: 26, size: 2, delay: 0, duration: 4 },
+  { top: 30, left: 72, size: 1.5, delay: 1.2, duration: 5 },
+  { top: 62, left: 20, size: 2.5, delay: 2.1, duration: 3.6 },
+  { top: 74, left: 66, size: 1.5, delay: 0.6, duration: 4.8 },
+  { top: 44, left: 84, size: 2, delay: 3, duration: 5.4 },
+  { top: 22, left: 52, size: 1.5, delay: 2.6, duration: 4.2 },
+  { top: 84, left: 42, size: 2, delay: 1.8, duration: 6 },
+  { top: 54, left: 12, size: 1.5, delay: 3.4, duration: 4.4 },
+];
+
 const ringSpeed: Record<OrbState, string> = {
   idle: "8s",
   listening: "2.2s",
@@ -75,7 +86,38 @@ export function NyraOrb({ state, level = 0, size = 240 }: Props) {
       {/* body */}
       <div className="nyra-orb__shell absolute inset-[16%] rounded-full" />
       <div className="nyra-orb__inner absolute inset-[28%] rounded-full" />
+
+      {/* stars inside the orb */}
+      <div className="nyra-orb__stars absolute inset-[16%] rounded-full">
+        {STARS.map((s, i) => (
+          <span
+            key={i}
+            className="nyra-orb__star"
+            style={
+              {
+                top: `${s.top}%`,
+                left: `${s.left}%`,
+                width: s.size,
+                height: s.size,
+                "--star-delay": `${s.delay}s`,
+                "--star-duration": `${s.duration}s`,
+                "--star-opacity": "0.9",
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </div>
+
       <div className="nyra-orb__core absolute inset-[42%] rounded-full" />
+      {/* humanoid silhouette: head, neck, shoulders */}
+      <div className="nyra-orb__figure absolute inset-[16%] rounded-full">
+        <span className="nyra-orb__head" />
+        <span className="nyra-orb__neck" />
+        <span className="nyra-orb__shoulders" />
+        <span className="nyra-orb__halo" />
+      </div>
+
+
       <div className="nyra-orb__highlight absolute inset-[16%] rounded-full" />
     </div>
   );
