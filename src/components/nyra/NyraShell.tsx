@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Activity, Brain, Home, Lightbulb, ListTodo, Settings, Sparkles } from "lucide-react";
+import { Activity, Brain, Home, Lightbulb, ListTodo, Settings, Share2, Sparkles } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Home", icon: Home },
   { to: "/memory", label: "Memory", icon: Brain },
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/devices", label: "Devices", icon: Lightbulb },
+  { to: "/social", label: "Social", icon: Share2 },
   { to: "/skills", label: "Skills", icon: Sparkles },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },

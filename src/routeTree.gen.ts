@@ -15,6 +15,7 @@ import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SkillsRouteImport } from './routes/skills'
+import { Route as SocialRouteImport } from './routes/social'
 import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as ApiDevicesRouteImport } from './routes/api/devices'
@@ -50,6 +51,11 @@ const SkillsRoute = SkillsRouteImport.update({
   path: '/skills',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SocialRoute = SocialRouteImport.update({
+  id: '/social',
+  path: '/social',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TasksRoute = TasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
+  '/social': typeof SocialRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
+  '/social': typeof SocialRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
+  '/social': typeof SocialRoute
   '/tasks': typeof TasksRoute
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/memory'
     | '/settings'
     | '/skills'
+    | '/social'
     | '/tasks'
     | '/today'
     | '/api/devices'
@@ -129,6 +139,7 @@ export interface FileRouteTypes {
     | '/memory'
     | '/settings'
     | '/skills'
+    | '/social'
     | '/tasks'
     | '/today'
     | '/api/devices'
@@ -141,6 +152,7 @@ export interface FileRouteTypes {
     | '/memory'
     | '/settings'
     | '/skills'
+    | '/social'
     | '/tasks'
     | '/today'
     | '/api/devices'
@@ -154,6 +166,7 @@ export interface RootRouteChildren {
   MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
   SkillsRoute: typeof SkillsRoute
+  SocialRoute: typeof SocialRoute
   TasksRoute: typeof TasksRoute
   TodayRoute: typeof TodayRoute
   ApiDevicesRoute: typeof ApiDevicesRouteWithChildren
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/skills'
       fullPath: '/skills'
       preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/social': {
+      id: '/social'
+      path: '/social'
+      fullPath: '/social'
+      preLoaderRoute: typeof SocialRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tasks': {
@@ -253,6 +273,7 @@ const rootRouteChildren: RootRouteChildren = {
   MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
   SkillsRoute: SkillsRoute,
+  SocialRoute: SocialRoute,
   TasksRoute: TasksRoute,
   TodayRoute: TodayRoute,
   ApiDevicesRoute: ApiDevicesRouteWithChildren,
