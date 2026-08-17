@@ -75,6 +75,36 @@ export function NyraOrb({ state, level = 0, size = 240 }: Props) {
       {/* body */}
       <div className="nyra-orb__shell absolute inset-[16%] rounded-full" />
       <div className="nyra-orb__inner absolute inset-[28%] rounded-full" />
+
+      {/* humanoid silhouette: head, neck, shoulders */}
+      <div className="nyra-orb__figure absolute inset-[16%] rounded-full">
+        <span className="nyra-orb__head" />
+        <span className="nyra-orb__neck" />
+        <span className="nyra-orb__shoulders" />
+        <span className="nyra-orb__halo" />
+      </div>
+
+      {/* stars inside the orb */}
+      <div className="nyra-orb__stars absolute inset-[16%] rounded-full">
+        {STARS.map((s, i) => (
+          <span
+            key={i}
+            className="nyra-orb__star"
+            style={
+              {
+                top: `${s.top}%`,
+                left: `${s.left}%`,
+                width: s.size,
+                height: s.size,
+                "--star-delay": `${s.delay}s`,
+                "--star-duration": `${s.duration}s`,
+                "--star-opacity": "0.9",
+              } as React.CSSProperties
+            }
+          />
+        ))}
+      </div>
+
       <div className="nyra-orb__core absolute inset-[42%] rounded-full" />
       <div className="nyra-orb__highlight absolute inset-[16%] rounded-full" />
     </div>
