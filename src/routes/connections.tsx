@@ -147,11 +147,11 @@ function ConnectionsPage() {
 
   const toggleLocation = async () => {
     if (locationOn) {
-      clearLocation();
+      locationStore.clear();
       setLocationOn(false);
       return;
     }
-    const ok = await requestLocation();
+    const ok = Boolean(await requestLocation());
     setLocationOn(ok);
     if (!ok) setError("Your browser declined the location request.");
   };
