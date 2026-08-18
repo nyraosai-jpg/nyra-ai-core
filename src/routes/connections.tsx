@@ -13,7 +13,7 @@ import {
   startGoogleConnect,
   completeGoogleConnect,
 } from "@/lib/nyra/google.functions";
-import { getLocationPermission, requestLocation, clearLocation } from "@/lib/nyra/location";
+import { locationStore, requestLocation } from "@/lib/nyra/location";
 
 export const Route = createFileRoute("/connections")({
   head: () => ({
