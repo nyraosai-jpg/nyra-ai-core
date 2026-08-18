@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -20,6 +22,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as ApiDevicesRouteImport } from './routes/api/devices'
 import { Route as ApiDevicesIdRouteImport } from './routes/api/devices.$id'
+import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +32,16 @@ const IndexRoute = IndexRouteImport.update({
 const ActivityRoute = ActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectionsRoute = ConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevicesRoute = DevicesRouteImport.update({
@@ -76,10 +89,17 @@ const ApiDevicesIdRoute = ApiDevicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiDevicesRoute,
 } as any)
+const OauthGoogleReturnRoute = OauthGoogleReturnRouteImport.update({
+  id: '/oauth/google/return',
+  path: '/oauth/google/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
+  '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -89,10 +109,13 @@ export interface FileRoutesByFullPath {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
+  '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -102,11 +125,14 @@ export interface FileRoutesByTo {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
+  '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -116,12 +142,15 @@ export interface FileRoutesById {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/activity'
+    | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -131,10 +160,13 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/activity'
+    | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -144,10 +176,13 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   id:
     | '__root__'
     | '/'
     | '/activity'
+    | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -157,11 +192,14 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
+  AuthRoute: typeof AuthRoute
+  ConnectionsRoute: typeof ConnectionsRoute
   DevicesRoute: typeof DevicesRoute
   MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
@@ -170,6 +208,7 @@ export interface RootRouteChildren {
   TasksRoute: typeof TasksRoute
   TodayRoute: typeof TodayRoute
   ApiDevicesRoute: typeof ApiDevicesRouteWithChildren
+  OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +225,20 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connections': {
+      id: '/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devices': {
@@ -251,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevicesIdRouteImport
       parentRoute: typeof ApiDevicesRoute
     }
+    '/oauth/google/return': {
+      id: '/oauth/google/return'
+      path: '/oauth/google/return'
+      fullPath: '/oauth/google/return'
+      preLoaderRoute: typeof OauthGoogleReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -269,6 +329,8 @@ const ApiDevicesRouteWithChildren = ApiDevicesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
+  AuthRoute: AuthRoute,
+  ConnectionsRoute: ConnectionsRoute,
   DevicesRoute: DevicesRoute,
   MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
@@ -277,6 +339,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksRoute: TasksRoute,
   TodayRoute: TodayRoute,
   ApiDevicesRoute: ApiDevicesRouteWithChildren,
+  OauthGoogleReturnRoute: OauthGoogleReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

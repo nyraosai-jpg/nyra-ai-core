@@ -24,10 +24,25 @@ export function isConnected(connectorId: string): boolean {
 export async function gatewayFetch<T>(
   connectorId: string,
   path: string,
-  init: { method?: string; query?: Record<string, string>; body?: unknown } = {},
+  init: {
+    method?: string;
+    query?: Record<string, string>;
+    body?: unknown;
+    /** Signed-in app user — their own connection is preferred over any project-level key. */
+    userId?: string;
+  } = {},
 ): Promise<GatewayResult<T>> {
   const lovableKey = process.env["LOVABLE_API_KEY"];
-  const connKey = connectorKey(connectorId);
+  let connKey: string | undefined;
+  if (init.userId) {
+    try {
+      const { getConnectionKeyForUser } = await import("@/server/appUserConnections.server");
+      connKey = (await getConnectionKeyForUser(init.userId, connectorId)) ?? undefined;
+    } catch (e) {
+      console.error("per-user connection lookup failed", e);
+    }
+  }
+  connKey ??= connectorKey(connectorId);
   if (!lovableKey || !connKey) {
     return { ok: false, status: 0, error: "not_connected" };
   }
