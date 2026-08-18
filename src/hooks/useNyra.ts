@@ -26,6 +26,32 @@ const orbLabels: Record<OrbState, string> = {
   error: "Something went wrong.",
 };
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Wake detection. Accepts the configured wake word, common mishearings of it,
+ * and plain "wake up" so the user can rouse Nyra without tapping anything.
+ * Returns the remainder of the utterance so the question can go straight to
+ * the brain in the same breath ("Nyra, what's the weather?").
+ */
+export function matchWake(text: string, wakeWord: string): { matched: boolean; rest: string } {
+  const extras = ["hey " + wakeWord, "ok " + wakeWord, "wake up", "nyra", "naira", "neera"];
+  const phrases = [wakeWord, ...extras]
+    .map((p) => p.trim().toLowerCase())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  for (const phrase of phrases) {
+    const re = new RegExp(`\\b${escapeRe(phrase)}\\b[\\s,.!?]*`, "i");
+    if (re.test(text)) {
+      return { matched: true, rest: text.replace(re, " ").replace(/\s+/g, " ").trim() };
+    }
+  }
+  return { matched: false, rest: text.trim() };
+}
+
+
+
 /**
  * The conversation engine + orb state machine.
  * IDLE -> LISTENING -> THINKING -> (DEVICE_ACTIVE|MEMORY) -> SPEAKING -> IDLE.
@@ -45,6 +71,15 @@ export function useNyra(status: NyraStatusInfo) {
   const recognizerRef = useRef<ReturnType<typeof createRecognizer> | null>(null);
   const handsFreeRef = useRef(false);
   const awakeUntilRef = useRef(0);
+  const speakingRef = useRef(false);
+
+  /**
+   * Where the orb rests between turns: back to LISTENING when hands-free is
+   * still holding the mic open, otherwise IDLE.
+   */
+  const restState = useCallback((): OrbState => {
+    return handsFreeRef.current && recognizerRef.current ? "listening" : "idle";
+  }, []);
 
   useEffect(() => {
     setMessages(conversationStore.all());
@@ -58,6 +93,7 @@ export function useNyra(status: NyraStatusInfo) {
     setLevel(0);
   }, []);
 
+
   const persist = useCallback((next: Message[]) => {
     conversationStore.save(next);
     return next;
@@ -66,18 +102,20 @@ export function useNyra(status: NyraStatusInfo) {
   const speak = useCallback(
     async (text: string) => {
       if (!settings.voiceOutputEnabled || !status.ttsConfigured) {
-        setState("idle");
+        setState(restState());
         return;
       }
       try {
+        speakingRef.current = true;
         setState("speaking");
         activityLog.push("speaking", "Speaking…");
         const result = await nyraSpeak({
           data: { text: text.slice(0, 1800), voiceId: settings.voiceId },
         });
         if (!result.ok) {
+          speakingRef.current = false;
           setError(result.error);
-          setState("idle");
+          setState(restState());
           return;
         }
         const audio = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
@@ -89,19 +127,22 @@ export function useNyra(status: NyraStatusInfo) {
           setAudioReactive(true);
         }
         const finish = () => {
+          speakingRef.current = false;
           stopMeter();
-          setState("idle");
+          setState(restState());
         };
         audio.onended = finish;
         audio.onerror = finish;
         await audio.play().catch(finish);
       } catch {
+        speakingRef.current = false;
         stopMeter();
-        setState("idle");
+        setState(restState());
       }
     },
-    [settings.voiceOutputEnabled, settings.voiceId, status.ttsConfigured, stopMeter],
+    [settings.voiceOutputEnabled, settings.voiceId, status.ttsConfigured, stopMeter, restState],
   );
+
 
   const buildContext = useCallback(() => {
     const loc = locationStore.get();
@@ -163,10 +204,11 @@ export function useNyra(status: NyraStatusInfo) {
       setMessages(next);
       setPending(result.pending ?? null);
       await speak(result.text);
-      setState((s) => (s === "speaking" ? s : "idle"));
+      setState((s) => (s === "speaking" ? s : restState()));
       return next;
     },
-    [applyClientActions, persist, speak],
+    [applyClientActions, persist, speak, restState],
+
   );
 
   const send = useCallback(
@@ -239,6 +281,7 @@ export function useNyra(status: NyraStatusInfo) {
     async (handsFree: boolean) => {
       setError(null);
       setPartial("");
+      handsFreeRef.current = handsFree || handsFreeRef.current;
       setState("listening");
       activityLog.push("listening", handsFree ? "Hands-free listening started." : "Listening…");
 
@@ -253,19 +296,22 @@ export function useNyra(status: NyraStatusInfo) {
             setAudioReactive(true);
           }
         },
-        onPartial: setPartial,
+        onPartial: (text) => {
+          // Never surface Nyra hearing her own voice.
+          if (speakingRef.current) return;
+          setPartial(text);
+        },
         onFinal: (text) => {
           setPartial("");
+          if (speakingRef.current) return; // echo of Nyra's own speech
           if (handsFree) {
-            const wake = settings.wakeWord.toLowerCase();
-            const heard = text.toLowerCase();
+            const match = matchWake(text, settings.wakeWord);
             const awake = Date.now() < awakeUntilRef.current;
-            if (!heard.includes(wake) && !awake) return; // ignore ambient speech
+            if (!match.matched && !awake) return; // ambient speech: stay resting
             awakeUntilRef.current = Date.now() + 45_000;
-            const cleaned = heard.includes(wake)
-              ? text.replace(new RegExp(`\\b${settings.wakeWord}\\b[,\\s]*`, "i"), "").trim()
-              : text;
+            const cleaned = match.matched ? match.rest : text.trim();
             if (!cleaned) {
+              activityLog.push("system", "Wake word heard — Nyra is awake.");
               void speak("I'm here.");
               return;
             }
@@ -275,16 +321,31 @@ export function useNyra(status: NyraStatusInfo) {
           void send(text);
         },
         onError: (message) => {
+          const transient = /didn't catch that/i.test(message);
+          if (handsFree && transient) {
+            // Silence between utterances is normal in hands-free — keep resting.
+            setState((s) => (s === "listening" ? s : restState()));
+            return;
+          }
           setError(message);
           activityLog.push("error", message);
           setState("error");
           stopMeter();
+          if (handsFree) handsFreeRef.current = false;
         },
       });
       recognizerRef.current = recognizer;
       await recognizer.start();
     },
-    [send, settings.language, settings.voiceIsolation, settings.wakeWord, speak, stopMeter],
+    [
+      send,
+      settings.language,
+      settings.voiceIsolation,
+      settings.wakeWord,
+      speak,
+      stopMeter,
+      restState,
+    ],
   );
 
   const startListening = useCallback(() => beginRecognition(false), [beginRecognition]);
@@ -294,15 +355,18 @@ export function useNyra(status: NyraStatusInfo) {
     recognizerRef.current = null;
     stopMeter();
     handsFreeRef.current = false;
+    awakeUntilRef.current = 0;
     setState((s) => (s === "listening" ? "idle" : s));
   }, [stopMeter]);
 
   const stopSpeaking = useCallback(() => {
     audioRef.current?.pause();
     audioRef.current = null;
+    speakingRef.current = false;
     stopMeter();
-    setState("idle");
-  }, [stopMeter]);
+    setState(restState());
+  }, [stopMeter, restState]);
+
 
   const setHandsFree = useCallback(
     async (enabled: boolean) => {
