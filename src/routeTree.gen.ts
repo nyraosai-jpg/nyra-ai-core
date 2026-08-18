@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as DevicesRouteImport } from './routes/devices'
 import { Route as MemoryRouteImport } from './routes/memory'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -36,6 +37,11 @@ const ActivityRoute = ActivityRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectionsRoute = ConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DevicesRoute = DevicesRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
+  '/connections': typeof ConnectionsRoute
   '/devices': typeof DevicesRoute
   '/memory': typeof MemoryRoute
   '/settings': typeof SettingsRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/auth'
+    | '/connections'
     | '/devices'
     | '/memory'
     | '/settings'
@@ -187,6 +199,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
   AuthRoute: typeof AuthRoute
+  ConnectionsRoute: typeof ConnectionsRoute
   DevicesRoute: typeof DevicesRoute
   MemoryRoute: typeof MemoryRoute
   SettingsRoute: typeof SettingsRoute
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connections': {
+      id: '/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/devices': {
@@ -310,6 +330,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
   AuthRoute: AuthRoute,
+  ConnectionsRoute: ConnectionsRoute,
   DevicesRoute: DevicesRoute,
   MemoryRoute: MemoryRoute,
   SettingsRoute: SettingsRoute,
