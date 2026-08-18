@@ -178,10 +178,11 @@ export function useNyra(status: NyraStatusInfo) {
       setMessages(next);
       setPending(result.pending ?? null);
       await speak(result.text);
-      setState((s) => (s === "speaking" ? s : "idle"));
+      setState((s) => (s === "speaking" ? s : restState()));
       return next;
     },
-    [applyClientActions, persist, speak],
+    [applyClientActions, persist, speak, restState],
+
   );
 
   const send = useCallback(
