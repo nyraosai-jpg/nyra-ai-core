@@ -26,6 +26,32 @@ const orbLabels: Record<OrbState, string> = {
   error: "Something went wrong.",
 };
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Wake detection. Accepts the configured wake word, common mishearings of it,
+ * and plain "wake up" so the user can rouse Nyra without tapping anything.
+ * Returns the remainder of the utterance so the question can go straight to
+ * the brain in the same breath ("Nyra, what's the weather?").
+ */
+export function matchWake(text: string, wakeWord: string): { matched: boolean; rest: string } {
+  const extras = ["hey " + wakeWord, "ok " + wakeWord, "wake up", "nyra", "naira", "neera"];
+  const phrases = [wakeWord, ...extras]
+    .map((p) => p.trim().toLowerCase())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  for (const phrase of phrases) {
+    const re = new RegExp(`\\b${escapeRe(phrase)}\\b[\\s,.!?]*`, "i");
+    if (re.test(text)) {
+      return { matched: true, rest: text.replace(re, " ").replace(/\s+/g, " ").trim() };
+    }
+  }
+  return { matched: false, rest: text.trim() };
+}
+
+
+
 /**
  * The conversation engine + orb state machine.
  * IDLE -> LISTENING -> THINKING -> (DEVICE_ACTIVE|MEMORY) -> SPEAKING -> IDLE.
