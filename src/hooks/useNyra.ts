@@ -45,6 +45,15 @@ export function useNyra(status: NyraStatusInfo) {
   const recognizerRef = useRef<ReturnType<typeof createRecognizer> | null>(null);
   const handsFreeRef = useRef(false);
   const awakeUntilRef = useRef(0);
+  const speakingRef = useRef(false);
+
+  /**
+   * Where the orb rests between turns: back to LISTENING when hands-free is
+   * still holding the mic open, otherwise IDLE.
+   */
+  const restState = useCallback((): OrbState => {
+    return handsFreeRef.current && recognizerRef.current ? "listening" : "idle";
+  }, []);
 
   useEffect(() => {
     setMessages(conversationStore.all());
@@ -57,6 +66,7 @@ export function useNyra(status: NyraStatusInfo) {
     setAudioReactive(false);
     setLevel(0);
   }, []);
+
 
   const persist = useCallback((next: Message[]) => {
     conversationStore.save(next);
