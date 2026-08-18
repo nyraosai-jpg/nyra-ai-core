@@ -21,6 +21,7 @@ import { Route as TasksRouteImport } from './routes/tasks'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as ApiDevicesRouteImport } from './routes/api/devices'
 import { Route as ApiDevicesIdRouteImport } from './routes/api/devices.$id'
+import { Route as OauthGoogleReturnRouteImport } from './routes/oauth/google/return'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ApiDevicesIdRoute = ApiDevicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiDevicesRoute,
 } as any)
+const OauthGoogleReturnRoute = OauthGoogleReturnRouteImport.update({
+  id: '/oauth/google/return',
+  path: '/oauth/google/return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/today': typeof TodayRoute
   '/api/devices': typeof ApiDevicesRouteWithChildren
   '/api/devices/$id': typeof ApiDevicesIdRoute
+  '/oauth/google/return': typeof OauthGoogleReturnRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/today'
     | '/api/devices'
     | '/api/devices/$id'
+    | '/oauth/google/return'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   TasksRoute: typeof TasksRoute
   TodayRoute: typeof TodayRoute
   ApiDevicesRoute: typeof ApiDevicesRouteWithChildren
+  OauthGoogleReturnRoute: typeof OauthGoogleReturnRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDevicesIdRouteImport
       parentRoute: typeof ApiDevicesRoute
     }
+    '/oauth/google/return': {
+      id: '/oauth/google/return'
+      path: '/oauth/google/return'
+      fullPath: '/oauth/google/return'
+      preLoaderRoute: typeof OauthGoogleReturnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -298,6 +318,7 @@ const rootRouteChildren: RootRouteChildren = {
   TasksRoute: TasksRoute,
   TodayRoute: TodayRoute,
   ApiDevicesRoute: ApiDevicesRouteWithChildren,
+  OauthGoogleReturnRoute: OauthGoogleReturnRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
