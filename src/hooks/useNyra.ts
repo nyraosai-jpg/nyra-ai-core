@@ -76,18 +76,20 @@ export function useNyra(status: NyraStatusInfo) {
   const speak = useCallback(
     async (text: string) => {
       if (!settings.voiceOutputEnabled || !status.ttsConfigured) {
-        setState("idle");
+        setState(restState());
         return;
       }
       try {
+        speakingRef.current = true;
         setState("speaking");
         activityLog.push("speaking", "Speaking…");
         const result = await nyraSpeak({
           data: { text: text.slice(0, 1800), voiceId: settings.voiceId },
         });
         if (!result.ok) {
+          speakingRef.current = false;
           setError(result.error);
-          setState("idle");
+          setState(restState());
           return;
         }
         const audio = new Audio(`data:${result.mimeType};base64,${result.audioBase64}`);
@@ -99,19 +101,22 @@ export function useNyra(status: NyraStatusInfo) {
           setAudioReactive(true);
         }
         const finish = () => {
+          speakingRef.current = false;
           stopMeter();
-          setState("idle");
+          setState(restState());
         };
         audio.onended = finish;
         audio.onerror = finish;
         await audio.play().catch(finish);
       } catch {
+        speakingRef.current = false;
         stopMeter();
-        setState("idle");
+        setState(restState());
       }
     },
-    [settings.voiceOutputEnabled, settings.voiceId, status.ttsConfigured, stopMeter],
+    [settings.voiceOutputEnabled, settings.voiceId, status.ttsConfigured, stopMeter, restState],
   );
+
 
   const buildContext = useCallback(() => {
     const loc = locationStore.get();
