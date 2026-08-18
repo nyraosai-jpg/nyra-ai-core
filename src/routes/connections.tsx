@@ -91,7 +91,7 @@ function ConnectionsPage() {
     }
   }, [loading, session, navigate]);
 
-  useEffect(() => setLocationOn(getLocationPermission()), []);
+  useEffect(() => setLocationOn(Boolean(locationStore.get())), []);
 
   const refresh = useCallback(async () => {
     if (!session) return;
