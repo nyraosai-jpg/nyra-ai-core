@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { Activity, Brain, Home, Lightbulb, ListTodo, Settings, Share2, Sparkles } from "lucide-react";
+import { Activity, Brain, Home, Lightbulb, ListTodo, Link2, Settings, Share2, Sparkles } from "lucide-react";
 import { Starfield } from "@/components/nyra/Starfield";
 
 const nav = [
@@ -9,6 +9,7 @@ const nav = [
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/devices", label: "Devices", icon: Lightbulb },
   { to: "/social", label: "Social", icon: Share2 },
+  { to: "/connections", label: "Connect", icon: Link2 },
   { to: "/skills", label: "Skills", icon: Sparkles },
   { to: "/activity", label: "Activity", icon: Activity },
   { to: "/settings", label: "Settings", icon: Settings },
